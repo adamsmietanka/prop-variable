@@ -29,6 +29,11 @@ type tableRow struct {
 	V, J, Cp, Rpm, Angle, Eff, Power float64
 }
 
+type charts struct {
+	Cp []interface{} `json:"cp"`
+	Eff []interface{} `json:"eff"`
+}
+
 type surfaceChart struct {
 	Colorscale [][]interface{} `json:"colorscale"`
 	Hovertemplate string `json:"hovertemplate"`
@@ -96,46 +101,33 @@ func convertToFloat(records [][]string) ([][]float64, error) {
 	return values, nil
 }
 
-var maxZ = map[int]float64{
-	2: 0.44356605705079777,
-	3: 0.619386,
-	4: 0.8102169239607058,
-}
-
-func loadData(p props) ([][]float64, [][]float64, [][]float64) {
+func loadData(p props) ([][]float64, [][]float64) {
 	cpY := make([]float64, 51)
-	Z := make([]float64, 101)
 	effY := make([]float64, 101)
 	for i := range cpY {
 		cpY[i] = 10 + float64(i)
-	}
-	for i := range Z {
-		Z[i] = float64(i) * maxZ[p.Blades] / 100
 	}
 	for i := range effY {
 		effY[i] = 10 + 0.5 * float64(i)
 	}
 	cpFile := fmt.Sprintf("data/clark_%d_cp.csv", p.Blades)
-	cpXZFile := fmt.Sprintf("data/xz_clark_%d_cp.csv", p.Blades)
 	effFile := fmt.Sprintf("data/clark_%d_eff.csv", p.Blades)
 	cp := readCsvFile(cpFile)
-	cpXZ := readCsvFile(cpXZFile)
 	eff := readCsvFile(effFile)
-    return append(cp, cpY), append(cpXZ, Z), append(eff, effY) 
+    return append(cp, cpY), append(eff, effY) 
 }
 
-func getTable(p props, cpXZ, eff [][]float64) []tableRow {
+func table(p props, cp, eff [][]float64) []tableRow {
 	length := int(1.2 * p.MaxSpeed / p.StepSize)
 	table := make([]tableRow, length)
 	v := float64(0)
 	for i := range table {
 		j := v / (p.PropSpeed * p.Diameter)
-		cp := p.Cp
 		rpm := p.PropSpeed * 60 / p.Ratio
-		angle := InterpolateY(cpXZ[0], cpXZ[len(cpXZ) - 1], cpXZ[1:len(cpXZ) - 1], j, cp)
-		eff := 	 InterpolateZ(eff[0] , eff[len(eff) - 1]  , eff[1:len(eff) - 1]  , j, angle)
+		angle := BarycentricY(cp[0], cp[len(cp) - 1], cp[1:len(cp) - 1], j, p.Cp)
+		eff := 	 BarycentricZ(eff[0] , eff[len(eff) - 1]  , eff[1:len(eff) - 1]  , j, angle)
 		power := p.Power * eff
-		table[i] = tableRow{v, j, cp, rpm, angle, eff, power}
+		table[i] = tableRow{v, j, p.Cp, rpm, angle, eff, power}
 		v += p.StepSize
 	}
 	return table
@@ -186,15 +178,10 @@ func getProps (request events.APIGatewayProxyRequest) props {
 	return props{maxSpeed, stepSize, propSpeed, diameter, blades, Cp, power, ratio}
 }
 
-type charts struct {
-	Cp []interface{} `json:"cp"`
-	Eff []interface{} `json:"eff"`
-}
-
 func handle(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	p := getProps(request)
-    cp, cpXZ, eff := loadData(p)
-	table := getTable(p, cpXZ, eff)
+    cp, eff := loadData(p)
+	table := table(p, cp, eff)
 	chartCp, chartEff := getCharts(p, table, cp, eff)
 	body := struct{
 		Table []tableRow `json:"table"`

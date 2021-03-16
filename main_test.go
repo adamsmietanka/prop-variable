@@ -63,7 +63,6 @@ func Test_loadData(t *testing.T) {
 		args  args
 		want  [][]float64
 		want1 [][]float64
-		want2 [][]float64
 	}{
 		{
 			name: "Basic",
@@ -81,20 +80,16 @@ func Test_loadData(t *testing.T) {
 			},
 			want: [][]float64{},
 			want1: [][]float64{},
-			want2: [][]float64{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, got2 := loadData(tt.args.p)
+			got, got1 := loadData(tt.args.p)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("loadData() got = %v, want %v", got, tt.want)
 			}
 			if !reflect.DeepEqual(got1, tt.want1) {
 				t.Errorf("loadData() got1 = %v, want %v", got1, tt.want1)
-			}
-			if !reflect.DeepEqual(got2, tt.want2) {
-				t.Errorf("loadData() got2 = %v, want %v", got2, tt.want2)
 			}
 		})
 	}
@@ -170,7 +165,7 @@ func Test_table(t *testing.T) {
 		Power:     800,
 		Ratio:     0.4,
 	}
-    _, cpXZ, eff := loadData(p)
+    cp, eff := loadData(p)
 	type args struct {
 		p    props
 		cpXZ [][]float64
@@ -183,13 +178,13 @@ func Test_table(t *testing.T) {
 	}{
 		{
 			name: "Basic",
-			args: args{p, cpXZ, eff},
+			args: args{p, cp, eff},
 			want: []tableRow{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getTable(tt.args.p, tt.args.cpXZ, tt.args.eff); !reflect.DeepEqual(got, tt.want) {
+			if got := table(tt.args.p, tt.args.cpXZ, tt.args.eff); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("table() = %v, want %v", got, tt.want)
 			}
 		})
