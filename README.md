@@ -14,8 +14,12 @@ Barycentric coordinates are then used to calculate the desired coordinate.
 ## Interpolation method
 As a proof of concept the function was built using bilinear interpolation. The results however didn't really conform to the mesh.
 
-<img src="https://github.com/adamsmietanka/prop-variable/blob/master/docs/bilinear.png" align=middle/>
+<p align=middle> 
+  <img src="https://github.com/adamsmietanka/prop-variable/blob/master/docs/bilinear.png" />
+</p>
 
 The idea was scrapped in favor of barycentric interpolation, which produced perfect results. This solution is also used by ```griddata``` Scipy function which the Flask backend was built upon.
 
-<img src="https://github.com/adamsmietanka/prop-variable/blob/master/docs/barycentric.png" align=middle/>
+<p align=middle> 
+  <img src="https://github.com/adamsmietanka/prop-variable/blob/master/docs/barycentric.png" />
+</p>
