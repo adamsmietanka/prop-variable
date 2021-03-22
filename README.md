@@ -20,9 +20,11 @@ As a proof of concept the function was built using bilinear interpolation. The r
 
 The idea was scrapped in favor of barycentric interpolation, which produced perfect results. This solution is also used by ```griddata``` Scipy function which the Flask backend was built upon.
 
-<p align=middle> 
+<p align=middle>
   <img src="https://github.com/adamsmietanka/prop-variable/blob/master/docs/barycentric.png" />
 </p>
+
+The interpolation functions lie in a file outside ```main.go``` called ```interpolate.go```. The functions are thoroughly tested thanks to the use of TDD.
 
 ## Impact
 The serverless approach replaced the original Flask backend and helped speed up the calculation process almost 40x times.
